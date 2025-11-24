@@ -79,7 +79,7 @@ st.markdown("""
 # Configuration
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-PINECONE_INDEX_NAME = "cds-codes-embeddings"
+PINECONE_INDEX_NAME = "cds-codes-embeddings-5"
 
 # Mappings
 HEADER_MAPPINGS = [
@@ -227,7 +227,7 @@ def create_embedding(openai_client, text):
     """Generate embedding for text"""
     response = openai_client.embeddings.create(
         input=text,
-        model="text-embedding-3-small"
+        model="text-embedding-3-large"
     )
     return response.data[0].embedding
 
@@ -257,8 +257,9 @@ def get_quality_badge(score):
 def display_result_card(rank, match):
     score = match.score
     code = match.metadata.get('code', 'N/A')
-    short_desc = match.metadata.get('shortDescription', 'N/A')
-    long_desc = match.metadata.get('longDescription', 'N/A')
+    short_desc = match.metadata.get('short_description', 'N/A')
+    long_desc = match.metadata.get('long_description', 'N/A')
+    merged_desc = match.metadata.get('merged_description', None)
     
     badge, quality_class, color = get_quality_badge(score)
     
@@ -284,8 +285,12 @@ def display_result_card(rank, match):
         st.markdown(f"**Short Description:**")
         st.info(short_desc)
         
-        with st.expander("📄 View Full Description"):
-            st.write(long_desc)
+        if merged_desc:
+            with st.expander("📄 View Merged Description"):
+                st.write(merged_desc)
+        else:
+            with st.expander("📄 View Full Description"):
+                st.write(long_desc)
         
         st.markdown("---")
 
@@ -329,7 +334,7 @@ def display_comparison_chart(matches):
 
 def main():
     # Header
-    st.markdown('<div class="main-header">🔍 CDS Vector Search Tester</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🔍 CDS Normalization Tester via cosine similarity</div>', unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; color: #7f8c8d; font-size: 1.1rem;">QA testing for embedding-based normalization</p>', unsafe_allow_html=True)
     
     # Initialize clients
